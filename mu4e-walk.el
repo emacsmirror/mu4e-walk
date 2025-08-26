@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: 
 ;; Version: 0
-;; Last modified: 2025-08-24 Sun 15:50:19
+;; Last modified: 2025-08-26 Tue 14:20:05
 ;; Package-Requires: ((mu4e "1.12.11"))
 ;; Keywords: mu4e
 
@@ -46,11 +46,6 @@
 (defvar description+email-regexp "[[:space:]]*\\(\"[^\"]*\"[[:space:]]*<[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>\\|[^,:\"]*<?[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>?\\)"
   "Regular expression of an email address including optional description.")
 
-(defvar mu4e-walk--email-region-start nil)
-(defvar mu4e-walk--email-region-end nil)
-(defvar mu4e-walk--email-rel-pos nil)
-(defvar mu4e-walk--region-active nil)
-
 
 ;;====================
 ;;
@@ -67,46 +62,48 @@
                             (line-end-position) t))))
 
 (defun mu4e-walk--email-address-at-point ()
-  "Return the email address as a string including the descriptor in a message header.
-
-As a side effect, the position of the email address is stored in 
-`mu4e-walk--email-region-start' and `mu4e-walk--email-region-end'."
+  "Return the email address as a plist."
   (when (and (message-point-in-header-p)
              (mu4e-walk--point-in-address-field-p)
              (not (or (eq ?, (char-after))
                       (eq ?: (char-after)))))
-    (setq mu4e-walk--region-active nil)
-    (if (region-active-p)
-        (progn
-          (setq mu4e-walk--email-region-start (region-beginning)
-                mu4e-walk--email-region-end (region-end)
-                mu4e-walk--region-active t
-                mu4e-walk--email-rel-pos (- (region-end) (region-beginning)))
-          (buffer-substring-no-properties (region-beginning) (region-end)))
-      (save-excursion
-        (let ((point (point)))
-          (cl-loop
-           while (re-search-backward "[,:]" (line-beginning-position) t)
-           do (let ((start (+ (point) 1))
-                    (end (re-search-forward description+email-regexp nil t)))
-                (when (<= point end)
-                  (let ((email (string-trim
-                                (string-replace
-                                 "\n" ""
-                                 (buffer-substring-no-properties start end)))))
-                    (when (string-match (concat "^" description+email-regexp "$")
-                                        email)
-                      (setq mu4e-walk--email-region-start start
-                            mu4e-walk--email-region-end end
-                            mu4e-walk--email-rel-pos (max 0 (- end point)))
-                      (cl-return email))
-                    ))
-                (goto-char start) ;; Return to start position before again searching backward 
-                )))))))
+    (let ((email)
+          (start)
+          (end)
+          (relpos)
+          (active))
+      (if (region-active-p)
+          `(:email ,(buffer-substring-no-properties (region-beginning) (region-end))
+                   :start ,(region-beginning)
+                   :end ,(region-end)
+                   :relpos ,(- (region-end) (region-beginning))
+                   :active t)
+        (save-excursion
+          (let ((point (point)))
+            (cl-loop
+             while (re-search-backward "[,:]" (line-beginning-position) t)
+             do (setq start (+ (point) 1)
+                      end (re-search-forward description+email-regexp nil t))
+             (when (<= point end)
+               (setq email (string-trim
+                            (string-replace
+                             "\n" ""
+                             (buffer-substring-no-properties start end))))
+               (when (string-match (concat "^" description+email-regexp "$")
+                                   email)
+                 (setq relpos (max 0 (- end point)))
+                 (cl-return `(:email ,email
+                                     :start ,start
+                                     :end ,end
+                                     :relpos ,relpos
+                                     :active ,active))))
+             (goto-char start) ;; Return to start position before again searching backward 
+             )))))))
 
 (defun mu4e-walk--clean-address-field-at-point ()
   (let ((start (line-beginning-position))
         (end (line-end-position)))
+    (replace-regexp-in-region ":," ":" start end)
     (replace-regexp-in-region "\\([:,]\\)[ ]*," "\\1 " start end)
     (replace-regexp-in-region "  " " " start end)
     (replace-regexp-in-region ",[ ]*$" "" start end)
@@ -120,48 +117,99 @@ As a side effect, the position of the email address is stored in
 ;;--------------------
 
 (defun mu4e-walk--move-email-address-at-point (&optional direction)
-  "Move email address to previous or next address field. If DIRECTION is 'backward,
-move it to the previous address field, else to the next one."
-  (let* ((search-function (if (eq direction 'backward)
-                              're-search-backward 're-search-forward))
-         (next-field-line-number (save-excursion
-                                   (when (eq direction 'backward) (beginning-of-line))
-                                   (and (funcall search-function
-                                                 message-email-recipient-header-regexp nil t)
-                                        (message-point-in-header-p)
-                                        (line-number-at-pos))))
-         (email (mu4e-walk--email-address-at-point)))
-    (when (and (mu4e-walk--point-in-address-field-p)
-               next-field-line-number
-               email)
-      (delete-region mu4e-walk--email-region-start
-                     mu4e-walk--email-region-end)
-      (mu4e-walk--clean-address-field-at-point)
-      ;; Goto target line
-      (goto-char (point-min))
-      (forward-line (1- next-field-line-number))
-      (mu4e-walk--clean-address-field-at-point)
-      (end-of-line)
-      (unless (looking-back ": ") (insert ", "))
-      (insert email)
-      (when mu4e-walk--region-active
-        (push-mark)
-        (setq deactivate-mark nil)
-        (setq mark-active t))
-      (backward-char mu4e-walk--email-rel-pos)
-      )))
+  "Move email address to previous or next address field.
+DIRECTION can be 'up, 'down, 'left, 'right."
+  (let* ((email-plist (mu4e-walk--email-address-at-point))
+         (email (plist-get email-plist :email))
+         (start (plist-get email-plist :start))
+         (end (plist-get email-plist :end))
+         (relpos (plist-get email-plist :relpos))
+         (active (plist-get email-plist :active)))
+    ;; Mover vertically
+    (cond ((or (eq direction 'up)
+               (eq direction 'down))
+           (let* ((search-function (if (eq direction 'up)
+                                       're-search-backward 're-search-forward))
+                  (next-field-line-number (save-excursion
+                                            (when (eq direction 'up) (beginning-of-line))
+                                            (and (funcall search-function
+                                                          message-email-recipient-header-regexp
+                                                          nil t)
+                                                 (message-point-in-header-p)
+                                                 (line-number-at-pos)))))
+             (when (and (mu4e-walk--point-in-address-field-p)
+                        next-field-line-number
+                        email)
+               (delete-region start end)
+               (mu4e-walk--clean-address-field-at-point)
+               ;; Goto target line
+               (goto-char (point-min))
+               (forward-line (1- next-field-line-number))
+               (mu4e-walk--clean-address-field-at-point)
+               (end-of-line)
+               (unless (looking-back ": ") (insert ", "))
+               (insert email)
+               (when active
+                 (push-mark)
+                 (setq deactivate-mark nil)
+                 (setq mark-active t))
+               (backward-char relpos))))
+          ;; Move horizontally
+          ((or (eq direction 'left)
+               (eq direction 'right))
+           (let ((next-email-plist (save-excursion
+                                     (if (eq direction 'left)
+                                         (progn 
+                                           (goto-char start)
+                                           (when (re-search-backward "@" (pos-bol) t)
+                                             (mu4e-walk--email-address-at-point)))
+                                       (progn 
+                                         (goto-char end)
+                                         (when (re-search-forward "@" (pos-eol) t)
+                                           (mu4e-walk--email-address-at-point)))))))
+             (when (and (mu4e-walk--point-in-address-field-p)
+                        email
+                        next-email-plist)
+               (if (eq direction 'left)
+                   (progn
+                     (delete-region start end)
+                     (goto-char (plist-get next-email-plist :start))
+                     (insert " " email ", ")
+                     (backward-char (+ relpos 2))
+                     (mu4e-walk--clean-address-field-at-point))
+                 (progn
+                   (goto-char (plist-get next-email-plist :end))
+                   (insert ", " email)
+                   (backward-char relpos)
+                   (delete-region start end)
+                   (mu4e-walk--clean-address-field-at-point))))))
+          (t nil))))
 
 ;;;###autoload
 (defun mu4e-walk-up ()
   "Move email address up to previous address field."
   (interactive)
-  (mu4e-walk--move-email-address-at-point 'backward))
+  (mu4e-walk--move-email-address-at-point 'up))
 
 ;;;###autoload
 (defun mu4e-walk-down ()
   "Move email address down to next address field."
   (interactive)
-  (mu4e-walk--move-email-address-at-point))
+  (mu4e-walk--move-email-address-at-point 'down))
+
+;;;###autoload
+(defun mu4e-walk-left ()
+  "Move email address left within the address field."
+  (interactive)
+  (mu4e-walk--move-email-address-at-point 'left))
+
+  ;;;###autoload
+(defun mu4e-walk-right ()
+  "Move email address right within the address field."
+  (interactive)
+  (mu4e-walk--move-email-address-at-point 'right))
+
+
 
 ;;====================
 ;;
@@ -184,7 +232,9 @@ move it to the previous address field, else to the next one."
   "Function which is added to a mode hook."
   (use-local-map (copy-keymap mu4e-compose-mode-map))
   (mu4e-walk-extend-key "M-<up>" 'mu4e-walk-up)
-  (mu4e-walk-extend-key "M-<down>" 'mu4e-walk-down))
+  (mu4e-walk-extend-key "M-<down>" 'mu4e-walk-down)
+  (mu4e-walk-extend-key "M-<left>" 'mu4e-walk-left)
+  (mu4e-walk-extend-key "M-<right>" 'mu4e-walk-right))
 
 ;; (add-hook 'mu4e-compose-mode-hook 'mu4e-walk-add-keybindings-compose-mode)
 
