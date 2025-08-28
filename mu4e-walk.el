@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: 
 ;; Version: 0
-;; Last modified: 2025-08-26 Tue 14:20:05
+;; Last modified: 2025-08-28 Thu 12:27:55
 ;; Package-Requires: ((mu4e "1.12.11"))
 ;; Keywords: mu4e
 
@@ -54,7 +54,7 @@
 ;;--------------------
 
 (defun mu4e-walk--point-in-address-field-p ()
-  "Non-nil if point is point is in an adress field."
+  "Non-nil if point is in an adress field."
   (save-excursion
     (beginning-of-line)
     (and (message-point-in-header-p)
@@ -103,7 +103,6 @@
 (defun mu4e-walk--clean-address-field-at-point ()
   (let ((start (line-beginning-position))
         (end (line-end-position)))
-    (replace-regexp-in-region ":," ":" start end)
     (replace-regexp-in-region "\\([:,]\\)[ ]*," "\\1 " start end)
     (replace-regexp-in-region "  " " " start end)
     (replace-regexp-in-region ",[ ]*$" "" start end)
@@ -125,65 +124,66 @@ DIRECTION can be 'up, 'down, 'left, 'right."
          (end (plist-get email-plist :end))
          (relpos (plist-get email-plist :relpos))
          (active (plist-get email-plist :active)))
-    ;; Mover vertically
-    (cond ((or (eq direction 'up)
-               (eq direction 'down))
-           (let* ((search-function (if (eq direction 'up)
-                                       're-search-backward 're-search-forward))
-                  (next-field-line-number (save-excursion
-                                            (when (eq direction 'up) (beginning-of-line))
-                                            (and (funcall search-function
-                                                          message-email-recipient-header-regexp
-                                                          nil t)
-                                                 (message-point-in-header-p)
-                                                 (line-number-at-pos)))))
-             (when (and (mu4e-walk--point-in-address-field-p)
-                        next-field-line-number
-                        email)
-               (delete-region start end)
-               (mu4e-walk--clean-address-field-at-point)
-               ;; Goto target line
-               (goto-char (point-min))
-               (forward-line (1- next-field-line-number))
-               (mu4e-walk--clean-address-field-at-point)
-               (end-of-line)
-               (unless (looking-back ": ") (insert ", "))
-               (insert email)
-               (when active
-                 (push-mark)
-                 (setq deactivate-mark nil)
-                 (setq mark-active t))
-               (backward-char relpos))))
-          ;; Move horizontally
-          ((or (eq direction 'left)
-               (eq direction 'right))
-           (let ((next-email-plist (save-excursion
-                                     (if (eq direction 'left)
-                                         (progn 
-                                           (goto-char start)
-                                           (when (re-search-backward "@" (pos-bol) t)
-                                             (mu4e-walk--email-address-at-point)))
-                                       (progn 
-                                         (goto-char end)
-                                         (when (re-search-forward "@" (pos-eol) t)
-                                           (mu4e-walk--email-address-at-point)))))))
-             (when (and (mu4e-walk--point-in-address-field-p)
-                        email
-                        next-email-plist)
-               (if (eq direction 'left)
-                   (progn
-                     (delete-region start end)
-                     (goto-char (plist-get next-email-plist :start))
-                     (insert " " email ", ")
-                     (backward-char (+ relpos 2))
-                     (mu4e-walk--clean-address-field-at-point))
-                 (progn
-                   (goto-char (plist-get next-email-plist :end))
-                   (insert ", " email)
-                   (backward-char relpos)
-                   (delete-region start end)
-                   (mu4e-walk--clean-address-field-at-point))))))
-          (t nil))))
+    (cond
+     ;; Mover vertically
+     ((or (eq direction 'up)
+          (eq direction 'down))
+      (let* ((search-function (if (eq direction 'up)
+                                  're-search-backward 're-search-forward))
+             (next-field-line-number (save-excursion
+                                       (when (eq direction 'up) (beginning-of-line))
+                                       (and (funcall search-function
+                                                     message-email-recipient-header-regexp
+                                                     nil t)
+                                            (message-point-in-header-p)
+                                            (line-number-at-pos)))))
+        (when (and (mu4e-walk--point-in-address-field-p)
+                   next-field-line-number
+                   email)
+          (delete-region start end)
+          (mu4e-walk--clean-address-field-at-point)
+          ;; Goto target line
+          (goto-char (point-min))
+          (forward-line (1- next-field-line-number))
+          (mu4e-walk--clean-address-field-at-point)
+          (end-of-line)
+          (unless (looking-back ": ") (insert ", "))
+          (insert email)
+          (when active
+            (push-mark)
+            (setq deactivate-mark nil)
+            (setq mark-active t))
+          (backward-char relpos))))
+     ;; Move horizontally
+     ((or (eq direction 'left)
+          (eq direction 'right))
+      (let ((next-email-plist (save-excursion
+                                (if (eq direction 'left)
+                                    (progn 
+                                      (goto-char start)
+                                      (when (re-search-backward "@" (pos-bol) t)
+                                        (mu4e-walk--email-address-at-point)))
+                                  (progn 
+                                    (goto-char end)
+                                    (when (re-search-forward "@" (pos-eol) t)
+                                      (mu4e-walk--email-address-at-point)))))))
+        (when (and (mu4e-walk--point-in-address-field-p)
+                   email
+                   next-email-plist)
+          (if (eq direction 'left)
+              (progn
+                (delete-region start end)
+                (goto-char (plist-get next-email-plist :start))
+                (insert " " email ", ")
+                (backward-char (+ relpos 2))
+                (mu4e-walk--clean-address-field-at-point))
+            (progn
+              (goto-char (plist-get next-email-plist :end))
+              (insert ", " email)
+              (backward-char relpos)
+              (delete-region start end)
+              (mu4e-walk--clean-address-field-at-point))))))
+     (t nil))))
 
 ;;;###autoload
 (defun mu4e-walk-up ()
@@ -203,12 +203,11 @@ DIRECTION can be 'up, 'down, 'left, 'right."
   (interactive)
   (mu4e-walk--move-email-address-at-point 'left))
 
-  ;;;###autoload
+;;;###autoload
 (defun mu4e-walk-right ()
   "Move email address right within the address field."
   (interactive)
   (mu4e-walk--move-email-address-at-point 'right))
-
 
 
 ;;====================
