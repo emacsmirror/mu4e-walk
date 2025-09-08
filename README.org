@@ -7,6 +7,7 @@ This README uses [[https://orgmode.org/][Org mode]].
 
 ** Features
 
+With just one key stroke:
 - Move email address "vertically" between address fields (identified with =message-email-recipient-header-regexp=)
 - Move email address "horizontally" within an address field
 - Also works with regions
