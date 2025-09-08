@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: 
 ;; Version: 0
-;; Last modified: 2025-08-28 Thu 14:11:24
+;; Last modified: 2025-09-08 Mon 17:37:07
 ;; Package-Requires: ((mu4e "1.12.11"))
 ;; Keywords: mu4e
 
@@ -54,7 +54,7 @@
 ;;--------------------
 
 (defun mu4e-walk--point-in-address-field-p ()
-  "Non-nil if point is in an adress field."
+  "Non-nil if point is in an address field."
   (save-excursion
     (beginning-of-line)
     (and (message-point-in-header-p)
@@ -80,7 +80,9 @@
             (cl-loop
              while (re-search-backward "[,:]" (line-beginning-position) t)
              do (setq start (+ (point) 1)
-                      end (re-search-forward description+email-regexp nil t))
+                      end (save-excursion
+                            (re-search-forward description+email-regexp
+                                               (line-end-position) t)))
              (when (<= point end)
                (setq email (string-trim
                             (string-replace
@@ -94,7 +96,6 @@
                                      :end ,end
                                      :relpos ,relpos
                                      :active ,active))))
-             (goto-char start) ;; Return to start position before again searching backward 
              )))))))
 
 (defun mu4e-walk--clean-address-field-at-point ()
