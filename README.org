@@ -1,0 +1,58 @@
+#+TITLE: mu4e-walk: Send email addresses for a walk
+#+AUTHOR: Timm Lichte
+
+Move email addresses around when composing emails with [[https://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]] in [[https://www.gnu.org/software/emacs/][Emacs]]. 
+
+This README uses [[https://orgmode.org/][Org mode]].
+
+** Features
+
+- Move email address "vertically" between address fields (identified with =message-email-recipient-header-regexp=)
+- Move email address "horizontally" within an address field
+- Also works with regions
+
+** Installation
+
+*** Dependencies
+
+-  [[https://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]] (mainly because it hooks into =mu4e-compose-mode=)
+
+*** Installation with Melpa
+
+Not yet available.
+
+*** Installation from Github
+
+Download =mu4e-walk.el= to your =.emacs.d= folder and add the following code to your init file:
+
+#+BEGIN_SRC emacs-lisp
+(use-package mu4e-walk
+  :after mu4e
+  :load-path "relative/path/to/mu4e-walk.el")
+	:config
+	(add-hook 'mu4e-compose-mode-hook 'mu4e-walk-add-keybindings-compose-mode) ; Optional
+)
+#+END_SRC
+
+** Usage
+
+The most important functions and keybindings are: 
+
+| Function        | Keybinding  |
+|-----------------+-------------|
+| =mu4e-walk-up=    | =M-<up>=      |
+| =mu4e-walk-down=  | =M-<down>=    |
+| =mu4e-walk-left=  | =M-<left>=    |
+| =mu4e-walk-right= | =M-<right>= |
+
+** Configuration
+
+For customizing the keybindings, take a look at the function =mu4e-walk-add-keybindings-compose-mode=. 
+
+** Ideas & plans
+
+As for my own needs, mu4e-walk is currently feature-complete.  
+
+** Alternative and related Emacs packages
+
+As far as I know, there are no similar packages.
