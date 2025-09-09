@@ -4,6 +4,7 @@
 Move email addresses around when composing emails with [[https://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]] in [[https://www.gnu.org/software/emacs/][Emacs]]. 
 
 [[file:screencast.gif]]
+(The screencast shows the [[https://github.com/oneKelvinSmith/monokai-emacs][Monokai theme]].)
 
 This README uses [[https://orgmode.org/][Org mode]].
 
