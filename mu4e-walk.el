@@ -4,9 +4,9 @@
 
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: 
-;; Version: 0
-;; Last modified: 2025-09-08 Mon 17:37:07
-;; Package-Requires: ((mu4e "1.12.11"))
+;; Version: 1.0
+;; Last modified: 2025-09-09 Tue 22:40:50
+;; Package-Requires: ((mu4e "1.12"))
 ;; Keywords: mu4e
 
 ;; Permission is hereby granted, free of charge, to any person
@@ -95,8 +95,7 @@
                                      :start ,start
                                      :end ,end
                                      :relpos ,relpos
-                                     :active ,active))))
-             )))))))
+                                     :active ,active)))))))))))
 
 (defun mu4e-walk--clean-address-field-at-point ()
   (let ((start (line-beginning-position))
