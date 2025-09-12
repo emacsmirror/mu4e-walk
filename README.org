@@ -1,6 +1,9 @@
 #+TITLE: mu4e-walk: Send email addresses for a walk
 #+AUTHOR: Timm Lichte
 
+[[https://melpa.org/#/mu4e-walk][https://melpa.org/packages/mu4e-walk-badge.svg]]
+# [[https://stable.melpa.org/#/mu4e-walk][https://stable.melpa.org/packages/mu4e-walk-badge.svg]]
+
 Move email addresses around when composing emails with [[https://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]] in [[https://www.gnu.org/software/emacs/][Emacs]]. 
 
 [[file:screencast.gif]]
@@ -10,7 +13,7 @@ This README uses [[https://orgmode.org/][Org mode]].
 
 ** Features
 
-With just one key stroke:
+When composing an email with mu4e, one can move around email addresses in the header with just one key stroke:
 - Move email address "vertically" between address fields (identified with =message-email-recipient-header-regexp=)
 - Move email address "horizontally" within an address field
 - Also works with regions
@@ -23,7 +26,16 @@ With just one key stroke:
 
 *** Installation with Melpa
 
-Not yet available.
+Assuming [[https://github.com/jwiegley/use-package][use-package]], just add the following to your init file:
+
+#+BEGIN_SRC emacs-lisp
+(use-package mu4e-walk
+  :after mu4e
+  :ensure t
+	:config
+	(add-hook 'mu4e-compose-mode-hook 'mu4e-walk-add-keybindings-compose-mode) ; Optional
+)
+#+END_SRC
 
 *** Installation from Github
 
@@ -52,6 +64,32 @@ The most important functions and keybindings are:
 ** Configuration
 
 For customizing the keybindings, take a look at the function =mu4e-walk-add-keybindings-compose-mode=. 
+
+By default, it looks like this:
+
+#+BEGIN_SRC emacs-lisp
+(defun mu4e-walk-add-keybindings-compose-mode ()
+  "Function which is added to a mode hook."
+  (use-local-map (copy-keymap mu4e-compose-mode-map))
+  (mu4e-walk-extend-key "M-<up>" 'mu4e-walk-up)
+  (mu4e-walk-extend-key "M-<down>" 'mu4e-walk-down)
+  (mu4e-walk-extend-key "M-<left>" 'mu4e-walk-left)
+  (mu4e-walk-extend-key "M-<right>" 'mu4e-walk-right))
+#+END_SRC
+
+One can change the keybindings by modifying the first argument of =mu4e-walk-extend-key= in the definition, for example:
+
+#+BEGIN_SRC emacs-lisp
+(defun mu4e-walk-add-keybindings-compose-mode ()
+  "Function which is added to a mode hook."
+  (use-local-map (copy-keymap mu4e-compose-mode-map))
+  (mu4e-walk-extend-key "C-<up>" 'mu4e-walk-up)
+  (mu4e-walk-extend-key "C-<down>" 'mu4e-walk-down)
+  (mu4e-walk-extend-key "C-<left>" 'mu4e-walk-left)
+  (mu4e-walk-extend-key "C-<right>" 'mu4e-walk-right))
+#+END_SRC
+
+The reason for using =mu4e-walk-add-keybindings-compose-mode= is that the mu4e-walk keybindings should only be active in the header of a message. When the cursor is in the body, the global keybindings should be used. (In my case, this is =move-text-up= etc.)  
 
 ** Ideas & plans
 

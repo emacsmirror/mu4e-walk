@@ -3,9 +3,9 @@
 ;; Copyright (C) 2025 Timm Lichte
 
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
-;; URL: 
+;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-09-09 Tue 22:40:50
+;; Last modified: 2025-09-12 Fri 10:02:40
 ;; Package-Requires: ((mu4e "1.12"))
 ;; Keywords: mu4e
 
@@ -31,6 +31,8 @@
 ;; OTHER DEALINGS IN THE SOFTWARE.
 
 ;;; Commentary:
+
+;; See https://codeberg.org/timmli/mu4e-walk
 
 ;;; Code:
 
