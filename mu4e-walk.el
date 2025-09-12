@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-09-12 Fri 10:45:58
+;; Last modified: 2025-09-12 Fri 11:04:02
 ;; Package-Requires: ((emacs "29.1")(mu4e "1.12"))
 ;; Keywords: convenience mail wp
 
@@ -116,7 +116,7 @@
 
 (defun mu4e-walk--move-email-address-at-point (&optional direction)
   "Move email address to previous or next address field.
-DIRECTION can be 'up, 'down, 'left, 'right."
+DIRECTION can be \\='up, \\='down, \\='left, \\='right."
   (let* ((email-plist (mu4e-walk--email-address-at-point))
          (email (plist-get email-plist :email))
          (start (plist-get email-plist :start))
@@ -146,7 +146,7 @@ DIRECTION can be 'up, 'down, 'left, 'right."
             (forward-line (1- next-field-line-number))
             (mu4e-walk--clean-address-field-at-point)
             (end-of-line)
-            (unless (looking-back ": ") (insert ", "))
+            (unless (looking-back ": " 2) (insert ", "))
             (insert email)
             (when active
               (push-mark)
