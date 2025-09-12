@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-09-12 Fri 11:04:02
+;; Last modified: 2025-09-12 Fri 11:08:58
 ;; Package-Requires: ((emacs "29.1")(mu4e "1.12"))
 ;; Keywords: convenience mail wp
 
@@ -60,7 +60,7 @@
   (save-excursion
     (beginning-of-line)
     (and (message-point-in-header-p)
-         (re-search-forward message-email-recipient-header-regexp 
+         (re-search-forward message-email-recipient-header-regexp
                             (line-end-position) t))))
 
 (defun mu4e-walk--email-address-at-point ()
@@ -100,6 +100,7 @@
                                      :active ,active)))))))))))
 
 (defun mu4e-walk--clean-address-field-at-point ()
+  "Clean address field at point."
   (let ((start (line-beginning-position))
         (end (line-end-position)))
     (replace-regexp-in-region "\\([:,]\\)[ ]*," "\\1 " start end)
@@ -158,12 +159,12 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
             (eq direction 'right))
         (let ((next-email-plist (save-excursion
                                   (if (eq direction 'left)
-                                      (progn 
+                                      (progn
                                         (goto-char start)
                                         (when (re-search-backward "@" (pos-bol) t)
                                           (setq mark-active nil)
                                           (mu4e-walk--email-address-at-point)))
-                                    (progn 
+                                    (progn
                                       (goto-char end)
                                       (when (re-search-forward "@" (pos-eol) t)
                                         (setq mark-active nil)
@@ -229,7 +230,7 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
 (defun mu4e-walk-extend-key (key walk-fun)
   "Extend function bound to KEY with function WALK-FUN."
   (let ((oldfun (keymap-lookup nil key)))
-    (keymap-local-set key 
+    (keymap-local-set key
                       `(lambda ()
                          (interactive)
                          (if (message-point-in-header-p)
