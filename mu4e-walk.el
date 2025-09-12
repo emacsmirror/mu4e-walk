@@ -5,9 +5,9 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-09-12 Fri 10:02:40
-;; Package-Requires: ((mu4e "1.12"))
-;; Keywords: mu4e
+;; Last modified: 2025-09-12 Fri 10:45:58
+;; Package-Requires: ((emacs "29.1")(mu4e "1.12"))
+;; Keywords: convenience mail wp
 
 ;; Permission is hereby granted, free of charge, to any person
 ;; obtaining a copy of this software and associated documentation
@@ -45,7 +45,7 @@
 ;;
 ;;--------------------
 
-(defvar description+email-regexp "[[:space:]]*\\(\"[^\"]*\"[[:space:]]*<[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>\\|[^,:\"]*<?[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>?\\)"
+(defvar mu4e-walk-description+email-regexp "[[:space:]]*\\(\"[^\"]*\"[[:space:]]*<[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>\\|[^,:\"]*<?[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>?\\)"
   "Regular expression of an email address including optional description.")
 
 
@@ -83,14 +83,14 @@
              while (re-search-backward "[,:]" (line-beginning-position) t)
              do (setq start (+ (point) 1)
                       end (save-excursion
-                            (re-search-forward description+email-regexp
+                            (re-search-forward mu4e-walk-description+email-regexp
                                                (line-end-position) t)))
              (when (<= point end)
                (setq email (string-trim
                             (string-replace
                              "\n" ""
                              (buffer-substring-no-properties start end))))
-               (when (string-match (concat "^" description+email-regexp "$")
+               (when (string-match (concat "^" mu4e-walk-description+email-regexp "$")
                                    email)
                  (setq relpos (max 0 (- end point)))
                  (cl-return `(:email ,email
@@ -234,8 +234,7 @@ DIRECTION can be 'up, 'down, 'left, 'right."
                          (interactive)
                          (if (message-point-in-header-p)
                              (call-interactively (quote ,walk-fun))
-                           (call-interactively (quote ,oldfun))
-                           )))))
+                           (call-interactively (quote ,oldfun)))))))
 
 (defun mu4e-walk-add-keybindings-compose-mode ()
   "Function which is added to a mode hook."
