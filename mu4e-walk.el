@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-09-12 Fri 11:19:33
+;; Last modified: 2025-09-15 Mon 08:35:10
 ;; Package-Requires: ((emacs "29.1") (mu4e "1.12"))
 ;; Keywords: convenience mail
 
@@ -24,7 +24,24 @@
 
 ;;; Commentary:
 
-;; See https://codeberg.org/timmli/mu4e-walk
+;; When composing an email with mu4e, mu4e-walk allows for moving
+;; around email addresses in the header with just one key stroke:
+
+;; - Move email address "vertically" between address fields
+;; - Move email address "horizontally" within an address field
+;; - Also works with regions
+
+;; The most important functions and default keybindings are:
+
+;; | Function        | Keybinding  |
+;; |-----------------+-------------|
+;; | mu4e-walk-up    | M-<up>      |
+;; | mu4e-walk-down  | M-<down>    |
+;; | mu4e-walk-left  | M-<left>    |
+;; | mu4e-walk-right | M-<right>   |
+
+;; Installation note: This package depends on mu4e which must be installed
+;; separately from package.el.
 
 ;;; Code:
 
