@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-09-15 Mon 08:35:10
+;; Last modified: 2025-09-15 Mon 08:37:06
 ;; Package-Requires: ((emacs "29.1") (mu4e "1.12"))
 ;; Keywords: convenience mail
 
@@ -85,7 +85,7 @@
             (start)
             (end)
             (relpos)
-            (active))
+            (active nil))
         (save-excursion
           (let ((point (point)))
             (cl-loop
