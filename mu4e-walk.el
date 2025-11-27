@@ -94,7 +94,8 @@
                       end (save-excursion
                             (re-search-forward mu4e-walk-description+email-regexp
                                                (line-end-position) t)))
-             (when (<= point end)
+             (when (and end
+                        (<= point end))
                (setq email (string-trim
                             (string-replace
                              "\n" ""
