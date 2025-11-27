@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-09-15 Mon 08:37:06
+;; Last modified: 2025-11-27 Thu 22:33:42
 ;; Package-Requires: ((emacs "29.1") (mu4e "1.12"))
 ;; Keywords: convenience mail
 
@@ -30,15 +30,20 @@
 ;; - Move email address "vertically" between address fields
 ;; - Move email address "horizontally" within an address field
 ;; - Also works with regions
+;; - Moreover one can "vertically" and "horizontally" switch between email addresses.
 
 ;; The most important functions and default keybindings are:
 
-;; | Function        | Keybinding  |
-;; |-----------------+-------------|
-;; | mu4e-walk-up    | M-<up>      |
-;; | mu4e-walk-down  | M-<down>    |
-;; | mu4e-walk-left  | M-<left>    |
-;; | mu4e-walk-right | M-<right>   |
+;; | Function               | Keybinding  |
+;; |------------------------+-------------|
+;; | mu4e-walk-up           | M-<up>      |
+;; | mu4e-walk-down         | M-<down>    |
+;; | mu4e-walk-left         | M-<left>    |
+;; | mu4e-walk-right        | M-<right>   |
+;; | mu4e-walk-switch-up    | C-<up>      |
+;; | mu4e-walk-switch-down  | C-<down>    |
+;; | mu4e-walk-switch-left  | C-<left>    |
+;; | mu4e-walk-switch-right | C-<right>   |
 
 ;; Installation note: This package depends on mu4e which must be installed
 ;; separately from package.el.
@@ -56,6 +61,9 @@
 
 (defvar mu4e-walk-description+email-regexp "[[:space:]]*\\(\"[^\"]*\"[[:space:]]*<[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>\\|[^,:\"]*<?[-+_.~a-zA-Z][-+_.~:a-zA-Z0-9]*@[-.a-zA-Z0-9]+>?\\)"
   "Regular expression of an email address including optional description.")
+
+(defvar mu4e-walk-use-overlays t
+  "If non-nil, use overlays.")
 
 
 ;;====================
@@ -233,6 +241,74 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
 
 ;;====================
 ;;
+;; Switching
+;;
+;;--------------------
+
+(defun mu4e-walk--switch (&optional direction)
+  "Switch to email address close by.
+DIRECTION can be \\='up, \\='down, \\='left, \\='right."
+  (let ((origin (mu4e-walk--email-address-at-point))
+        (target-start nil)
+        (target-end nil)
+        (search-function nil))
+    (save-excursion
+      (when (eq direction 'up)
+        (forward-line -1)
+        (end-of-line)
+        (setq direction 'left))
+      (when (eq direction 'down)
+        (forward-line 1)
+        (beginning-of-line)
+        (setq direction 'right))
+      (when (eq direction 'left)
+        (setq search-function 're-search-backward))
+      (when (eq direction 'right)
+        (setq search-function 're-search-forward))
+      (cl-loop
+       while (funcall search-function "@" nil t)
+       do (let ((target (mu4e-walk--email-address-at-point)))
+            (when (and target
+                       (not (eq (when origin (plist-get origin :start))
+                                (plist-get target :start))))
+              (setq target-start (+ 1 (plist-get target :start)))
+              (setq target-end (plist-get target :end))
+              (cl-return t)))))
+    (when target-start (progn
+                         (goto-char target-start)
+                         (when mu4e-walk-use-overlays
+                           (let ((overlay (make-overlay target-start target-end)))
+                             (overlay-put overlay 'face '(:box (:line-width 1)))
+                             (run-at-time "0.5 sec" nil
+                                          (lambda () (delete-overlay overlay)))))))))
+
+;;;###autoload
+(defun mu4e-walk-switch-up ()
+  "Switch to next email address in the line above."
+  (interactive)
+  (mu4e-walk--switch 'up))
+
+;;;###autoload
+(defun mu4e-walk-switch-down ()
+  "Switch to next email address in the line below."
+  (interactive)
+  (mu4e-walk--switch 'down))
+
+;;;###autoload
+(defun mu4e-walk-switch-left ()
+  "Switch to next email address on the left."
+  (interactive)
+  (mu4e-walk--switch 'left))
+
+;;;###autoload
+(defun mu4e-walk-switch-right ()
+  "Switch to next email address on th right."
+  (interactive)
+  (mu4e-walk--switch 'right))
+
+
+;;====================
+;;
 ;; Keybindings
 ;;
 ;;--------------------
@@ -253,7 +329,11 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
   (mu4e-walk-extend-key "M-<up>" 'mu4e-walk-up)
   (mu4e-walk-extend-key "M-<down>" 'mu4e-walk-down)
   (mu4e-walk-extend-key "M-<left>" 'mu4e-walk-left)
-  (mu4e-walk-extend-key "M-<right>" 'mu4e-walk-right))
+  (mu4e-walk-extend-key "M-<right>" 'mu4e-walk-right)
+  (mu4e-walk-extend-key "C-<up>" 'mu4e-walk-switch-up)
+  (mu4e-walk-extend-key "C-<down>" 'mu4e-walk-switch-down)
+  (mu4e-walk-extend-key "C-<left>" 'mu4e-walk-switch-left)
+  (mu4e-walk-extend-key "C-<right>" 'mu4e-walk-switch-right))
 
 ;; (add-hook 'mu4e-compose-mode-hook 'mu4e-walk-add-keybindings-compose-mode)
 
