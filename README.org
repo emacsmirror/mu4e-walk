@@ -17,7 +17,8 @@ When composing an email with mu4e, one can move around email addresses in the he
 - Move email address "vertically" between address fields (identified with =message-email-recipient-header-regexp=)
 - Move email address "horizontally" within an address field
 - Also works with regions
-- Moreover one can "vertically" and "horizontally" switch between email addresses. 
+- Moreover one can "vertically" and "horizontally" switch between email addresses.
+- Moreover one can delete an email address at point.
 
 ** Installation
 
@@ -55,16 +56,17 @@ Download =mu4e-walk.el= to your =.emacs.d= folder and add the following code to 
 
 The most important functions and keybindings are: 
 
-| Function                 | Keybinding |
-|--------------------------+------------|
-| =mu4e-walk-up=             | =M-<up>=     |
-| =mu4e-walk-down=           | =M-<down>=   |
-| =mu4e-walk-left=           | =M-<left>=   |
-| =mu4e-walk-right=          | =M-<right>=  |
-| =mu4e-walk-switch-up=      | =C-<up>=     |
-| =mu4e-walk-switch-down=    | =C-<down>=   |
-| =mu4e-walk-switch-left=    | =C-<left>=   |
-| =mu4e-walk-switch-right= | =C-<right>=  |
+| Function                                | Keybinding            |
+|-----------------------------------------+-----------------------|
+| =mu4e-walk-up=                            | =M-<up>=                |
+| =mu4e-walk-down=                          | =M-<down>=              |
+| =mu4e-walk-left=                          | =M-<left>=              |
+| =mu4e-walk-right=                         | =M-<right>=             |
+| =mu4e-walk-switch-up=                     | =C-<up>=                |
+| =mu4e-walk-switch-down=                   | =C-<down>=              |
+| =mu4e-walk-switch-left=                   | =C-<left>=              |
+| =mu4e-walk-switch-right=                  | =C-<right>=             |
+| mu4e-walk-delete-email-address-at-point | M-<delete> M-<delete> |
 
 ** Configuration
 

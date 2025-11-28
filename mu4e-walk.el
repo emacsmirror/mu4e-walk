@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-11-28 Fri 16:14:29
+;; Last modified: 2025-11-28 Fri 16:18:07
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: convenience mail
 
@@ -31,19 +31,21 @@
 ;; - Move email address "horizontally" within an address field
 ;; - Also works with regions
 ;; - Moreover one can "vertically" and "horizontally" switch between email addresses.
+;; - Moreover one can delete an email address at point.
 
 ;; The most important functions and default keybindings are:
 
-;; | Function               | Keybinding  |
-;; |------------------------+-------------|
-;; | mu4e-walk-up           | M-<up>      |
-;; | mu4e-walk-down         | M-<down>    |
-;; | mu4e-walk-left         | M-<left>    |
-;; | mu4e-walk-right        | M-<right>   |
-;; | mu4e-walk-switch-up    | C-<up>      |
-;; | mu4e-walk-switch-down  | C-<down>    |
-;; | mu4e-walk-switch-left  | C-<left>    |
-;; | mu4e-walk-switch-right | C-<right>   |
+;; | Function                                | Keybinding  |
+;; |-----------------------------------------+-----------------------|
+;; | mu4e-walk-up                            | M-<up>                |
+;; | mu4e-walk-down                          | M-<down>              |
+;; | mu4e-walk-left                          | M-<left>              |
+;; | mu4e-walk-right                         | M-<right>             |
+;; | mu4e-walk-switch-up                     | C-<up>                |
+;; | mu4e-walk-switch-down                   | C-<down>              |
+;; | mu4e-walk-switch-left                   | C-<left>              |
+;; | mu4e-walk-switch-right                  | C-<right>             |
+;; | mu4e-walk-delete-email-address-at-point | M-<delete> M-<delete> |
 
 ;; Installation note: This package depends on mu4e which must be installed
 ;; separately from package.el.
@@ -297,6 +299,14 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
            (progn
              (when (eq direction 'left) (goto-char origin-start))
              (when (eq direction 'right) (goto-char origin-end))))
+          ((and origin
+                (eq direction 'right)
+                (< point origin-start))
+           (goto-char origin-start))
+          ((and origin
+                (eq direction 'left)
+                (> point (- origin-end 1)))
+           (goto-char (- origin-end 1)))
           (target-start
            (progn
              (goto-char target-start)
@@ -333,6 +343,30 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
 
 ;;====================
 ;;
+;; Deleting
+;;
+;;--------------------
+
+(defun mu4e-walk-delete-email-address-at-point ()
+  "Delete email address at point."
+  (interactive)
+  (let* ((email (mu4e-walk--email-address-at-point))
+         (email-start (plist-get email :start))
+         (email-end (plist-get email :end))
+         (line-number (line-number-at-pos)))
+    (when email
+      (when (region-active-p) (setq deactivate-mark nil))
+      (delete-region email-start email-end)
+      (mu4e-walk--clean-address-field-at-point)
+      (goto-char email-start)
+      (when (< line-number (line-number-at-pos))
+        (forward-line -1)
+        (end-of-line)
+        (when (mu4e-walk--email-address-at-point) (backward-char))))))
+
+
+;;====================
+;;
 ;; Keybindings
 ;;
 ;;--------------------
@@ -357,7 +391,8 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
   (mu4e-walk-extend-key "C-<up>" 'mu4e-walk-switch-up)
   (mu4e-walk-extend-key "C-<down>" 'mu4e-walk-switch-down)
   (mu4e-walk-extend-key "C-<left>" 'mu4e-walk-switch-left)
-  (mu4e-walk-extend-key "C-<right>" 'mu4e-walk-switch-right))
+  (mu4e-walk-extend-key "C-<right>" 'mu4e-walk-switch-right)
+  (mu4e-walk-extend-key "M-<delete> M-<delete>" 'mu4e-walk-delete-email-address-at-point))
 
 ;; (add-hook 'mu4e-compose-mode-hook 'mu4e-walk-add-keybindings-compose-mode)
 
