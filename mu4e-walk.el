@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-11-27 Thu 22:40:32
+;; Last modified: 2025-11-28 Fri 10:24:07
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: convenience mail
 
@@ -265,15 +265,16 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
         (setq search-function 're-search-backward))
       (when (eq direction 'right)
         (setq search-function 're-search-forward))
-      (cl-loop
-       while (funcall search-function "@" nil t)
-       do (let ((target (mu4e-walk--email-address-at-point)))
-            (when (and target
-                       (not (eq (when origin (plist-get origin :start))
-                                (plist-get target :start))))
-              (setq target-start (+ 1 (plist-get target :start)))
-              (setq target-end (plist-get target :end))
-              (cl-return t)))))
+      (when search-function
+        (cl-loop
+         while (funcall search-function "@" nil t)
+         do (let ((target (mu4e-walk--email-address-at-point)))
+              (when (and target
+                         (not (eq (when origin (plist-get origin :start))
+                                  (plist-get target :start))))
+                (setq target-start (+ 1 (plist-get target :start)))
+                (setq target-end (plist-get target :end))
+                (cl-return t))))))
     (when target-start (progn
                          (goto-char target-start)
                          (when mu4e-walk-use-overlays
