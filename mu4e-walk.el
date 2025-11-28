@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-11-28 Fri 11:40:39
+;; Last modified: 2025-11-28 Fri 14:55:52
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: convenience mail
 
@@ -92,24 +92,23 @@
         (let ((point (point)))
           (cl-loop
            while (re-search-backward "[,:]" (line-beginning-position) t)
-           do (setq start (+ (point) 1)
-                    end (save-excursion
-                          (re-search-forward mu4e-walk-description+email-regexp
-                                             (line-end-position) t)))
-           (when (and end
-                      (<= point end))
-             (setq email (string-trim
-                          (string-replace
-                           "\n" ""
-                           (buffer-substring-no-properties start end))))
-             (when (string-match (concat "^" mu4e-walk-description+email-regexp "$")
-                                 email)
-               (setq relpos (max 0 (- end point)))
-               (cl-return `(:email ,email
-                                   :start ,start
-                                   :end ,end
-                                   :relpos ,relpos
-                                   :active ,active))))))))))
+           do (when (and (setq end (save-excursion
+                                     (re-search-forward mu4e-walk-description+email-regexp
+                                                        (line-end-position) t))
+                               start (match-beginning 1))
+                         (<= point end))
+                (setq email (string-trim
+                             (string-replace
+                              "\n" ""
+                              (buffer-substring-no-properties start end))))
+                (when (string-match (concat "^" mu4e-walk-description+email-regexp "$")
+                                    email)
+                  (setq relpos (max 0 (- end point)))
+                  (cl-return `(:email ,email
+                                      :start ,start
+                                      :end ,end
+                                      :relpos ,relpos
+                                      :active ,active))))))))))
 
 (defun mu4e-walk--clean-address-field-at-point ()
   "Clean address field at point."
@@ -248,10 +247,13 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
 (defun mu4e-walk--switch (&optional direction)
   "Switch to email address close by.
 DIRECTION can be \\='up, \\='down, \\='left, \\='right."
-  (let ((origin (mu4e-walk--email-address-at-point))
-        (target-start nil)
-        (target-end nil)
-        (search-function nil))
+  (let* ((origin (mu4e-walk--email-address-at-point))
+         (origin-start (plist-get origin :start))
+         (origin-end (plist-get origin :end))
+         (point (point))
+         (target-start nil)
+         (target-end nil)
+         (search-function nil))
     (save-excursion
       (when (eq direction 'up)
         (forward-line -1)
@@ -270,18 +272,37 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
          while (funcall search-function "@" nil t)
          do (let ((target (mu4e-walk--email-address-at-point)))
               (when (and target
-                         (not (eq (when origin (plist-get origin :start))
+                         (not (eq (when origin origin-start)
                                   (plist-get target :start))))
-                (setq target-start (+ 1 (plist-get target :start)))
+                (setq target-start (plist-get target :start))
                 (setq target-end (plist-get target :end))
                 (cl-return t))))))
-    (when target-start (progn
-                         (goto-char target-start)
-                         (when mu4e-walk-use-overlays
-                           (let ((overlay (make-overlay target-start target-end)))
-                             (overlay-put overlay 'face '(:box (:line-width 1)))
-                             (run-at-time "0.5 sec" nil
-                                          (lambda () (delete-overlay overlay)))))))))
+    (cond ((and origin (region-active-p)
+                (eq direction 'right))
+           (cond ((< point origin-end)
+                  (goto-char origin-end))
+                 ((and (= point origin-end) target-start)
+                  (goto-char target-start))))
+          ((and origin (region-active-p)
+                (eq direction 'left))
+           (cond ((> point origin-start)
+                  (goto-char origin-start))
+                 ((and (= point origin-start) target-end)
+                  (goto-char target-end))))
+          ((and origin
+                (> point origin-start)
+                (< point origin-end))
+           (progn
+             (when (eq direction 'left) (goto-char origin-start))
+             (when (eq direction 'right) (goto-char origin-end))))
+          (target-start
+           (progn
+             (goto-char target-start)
+             (when mu4e-walk-use-overlays
+               (let ((overlay (make-overlay target-start target-end)))
+                 (overlay-put overlay 'face '(:box (:line-width 1)))
+                 (run-at-time "0.5 sec" nil
+                              (lambda () (delete-overlay overlay))))))))))
 
 ;;;###autoload
 (defun mu4e-walk-switch-up ()
