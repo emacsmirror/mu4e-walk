@@ -16,9 +16,9 @@ This README uses [[https://orgmode.org/][Org mode]].
 When composing an email with mu4e, one can move around email addresses in the header with just one key stroke:
 - Move email address "vertically" between address fields (identified with =message-email-recipient-header-regexp=)
 - Move email address "horizontally" within an address field
-- Also works with regions
-- Moreover one can "vertically" and "horizontally" switch between email addresses.
-- Moreover one can delete an email address at point.
+- Also works with regions!
+- Switch "vertically" and "horizontally" between email addresses.
+- Delete an email address at point.
 
 ** Installation
 
