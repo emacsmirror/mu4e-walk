@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-11-28 Fri 10:24:07
+;; Last modified: 2025-11-28 Fri 11:40:39
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: convenience mail
 
@@ -83,39 +83,33 @@
 (defun mu4e-walk--email-address-at-point ()
   "Return the email address at point as a plist."
   (when (mu4e-walk--point-in-address-field-p)
-    (if (region-active-p)
-        `(:email ,(buffer-substring-no-properties (region-beginning) (region-end))
-                 :start ,(region-beginning)
-                 :end ,(region-end)
-                 :relpos ,(- (region-end) (region-beginning))
-                 :active t)
-      (let ((email)
-            (start)
-            (end)
-            (relpos)
-            (active nil))
-        (save-excursion
-          (let ((point (point)))
-            (cl-loop
-             while (re-search-backward "[,:]" (line-beginning-position) t)
-             do (setq start (+ (point) 1)
-                      end (save-excursion
-                            (re-search-forward mu4e-walk-description+email-regexp
-                                               (line-end-position) t)))
-             (when (and end
-                        (<= point end))
-               (setq email (string-trim
-                            (string-replace
-                             "\n" ""
-                             (buffer-substring-no-properties start end))))
-               (when (string-match (concat "^" mu4e-walk-description+email-regexp "$")
-                                   email)
-                 (setq relpos (max 0 (- end point)))
-                 (cl-return `(:email ,email
-                                     :start ,start
-                                     :end ,end
-                                     :relpos ,relpos
-                                     :active ,active)))))))))))
+    (let ((email)
+          (start)
+          (end)
+          (relpos)
+          (active nil))
+      (save-excursion
+        (let ((point (point)))
+          (cl-loop
+           while (re-search-backward "[,:]" (line-beginning-position) t)
+           do (setq start (+ (point) 1)
+                    end (save-excursion
+                          (re-search-forward mu4e-walk-description+email-regexp
+                                             (line-end-position) t)))
+           (when (and end
+                      (<= point end))
+             (setq email (string-trim
+                          (string-replace
+                           "\n" ""
+                           (buffer-substring-no-properties start end))))
+             (when (string-match (concat "^" mu4e-walk-description+email-regexp "$")
+                                 email)
+               (setq relpos (max 0 (- end point)))
+               (cl-return `(:email ,email
+                                   :start ,start
+                                   :end ,end
+                                   :relpos ,relpos
+                                   :active ,active))))))))))
 
 (defun mu4e-walk--clean-address-field-at-point ()
   "Clean address field at point."
@@ -136,7 +130,13 @@
 (defun mu4e-walk--move-email-address-at-point (&optional direction)
   "Move email address to previous or next address field.
 DIRECTION can be \\='up, \\='down, \\='left, \\='right."
-  (let* ((email-plist (mu4e-walk--email-address-at-point))
+  (let* ((email-plist (if (region-active-p)
+                          `(:email ,(buffer-substring-no-properties (region-beginning) (region-end))
+                                   :start ,(region-beginning)
+                                   :end ,(region-end)
+                                   :relpos ,(- (region-end) (region-beginning))
+                                   :active t)
+                        (mu4e-walk--email-address-at-point)))
          (email (plist-get email-plist :email))
          (start (plist-get email-plist :start))
          (end (plist-get email-plist :end))
