@@ -4,8 +4,8 @@
 
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
-;; Version: 1.0
-;; Last modified: 2025-11-28 Fri 16:18:07
+;; Version: 2.0
+;; Last modified: 2025-11-28 Fri 16:24:41
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: convenience mail
 
