@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 1.0
-;; Last modified: 2025-11-28 Fri 14:55:52
+;; Last modified: 2025-11-28 Fri 15:31:33
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: convenience mail
 
@@ -115,7 +115,8 @@
   (let ((start (line-beginning-position))
         (end (line-end-position)))
     (replace-regexp-in-region "\\([:,]\\)[ ]*," "\\1 " start end)
-    (replace-regexp-in-region "  " " " start end)
+    (replace-regexp-in-region "[, ]*,[, ]*" ", " start end)
+    (replace-regexp-in-region "  [ ]+" " " start end)
     (replace-regexp-in-region ",[ ]*$" "" start end)
     (replace-regexp-in-region ":$" ": " start end)))
 
