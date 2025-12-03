@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 2.0
-;; Last modified: 2025-11-28 Fri 16:24:41
+;; Last modified: 2025-12-03 Wed 17:24:17
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: convenience mail
 
@@ -253,7 +253,7 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
 DIRECTION can be \\='up, \\='down, \\='left, \\='right."
   (let* ((origin (mu4e-walk--email-address-at-point))
          (origin-start (plist-get origin :start))
-         (origin-end (plist-get origin :end))
+         (origin-end (- (plist-get origin :end) 1))
          (point (point))
          (target-start nil)
          (target-end nil)
@@ -301,15 +301,15 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
              (when (eq direction 'right) (goto-char origin-end))))
           ((and origin
                 (eq direction 'right)
-                (< point origin-start))
-           (goto-char origin-start))
+                (= point origin-start))
+           (goto-char origin-end))
           ((and origin
                 (eq direction 'left)
-                (> point (- origin-end 1)))
-           (goto-char (- origin-end 1)))
+                (= point origin-end))
+           (goto-char origin-start))
           (target-start
            (progn
-             (goto-char target-start)
+             (if (eq direction 'right) (goto-char (- target-end 1)) (goto-char target-start))
              (when mu4e-walk-use-overlays
                (let ((overlay (make-overlay target-start target-end)))
                  (overlay-put overlay 'face '(:box (:line-width 1)))
