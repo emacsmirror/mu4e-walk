@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 2.0
-;; Last modified: 2025-12-03 Wed 17:24:17
+;; Last modified: 2025-12-05 Fri 12:27:53
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: convenience mail
 
@@ -97,7 +97,10 @@
            do (when (and (setq end (save-excursion
                                      (re-search-forward mu4e-walk-description+email-regexp
                                                         (line-end-position) t))
-                               start (match-beginning 1))
+                               start (save-excursion
+                                       (when (re-search-forward
+                                              "\\([,:][[:space:]]\\)*[[:graph:]]" (line-end-position) t)
+                                         (match-end 1))))
                          (<= point end))
                 (setq email (string-trim
                              (string-replace
