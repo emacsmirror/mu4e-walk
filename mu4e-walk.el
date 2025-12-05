@@ -252,8 +252,8 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
   "Switch to email address close by.
 DIRECTION can be \\='up, \\='down, \\='left, \\='right."
   (let* ((origin (mu4e-walk--email-address-at-point))
-         (origin-start (plist-get origin :start))
-         (origin-end (- (plist-get origin :end) 1))
+         (origin-start (when origin (plist-get origin :start)))
+         (origin-end (when origin (- (plist-get origin :end) 1)))
          (point (point))
          (target-start nil)
          (target-end nil)
@@ -276,7 +276,7 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
          while (funcall search-function "@" nil t)
          do (let ((target (mu4e-walk--email-address-at-point)))
               (when (and target
-                         (not (eq (when origin origin-start)
+                         (not (eq origin-start
                                   (plist-get target :start))))
                 (setq target-start (plist-get target :start))
                 (setq target-end (plist-get target :end))
