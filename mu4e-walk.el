@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 2.0
-;; Last modified: 2025-12-05 Fri 12:32:30
+;; Last modified: 2025-12-10 Wed 18:44:14
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: convenience mail
 
@@ -265,10 +265,12 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
       (when (eq direction 'up)
         (forward-line -1)
         (end-of-line)
+        (setq point (point))
         (setq direction 'left))
       (when (eq direction 'down)
         (forward-line 1)
         (beginning-of-line)
+        (setq point (point))
         (setq direction 'right))
       (when (eq direction 'left)
         (setq search-function 're-search-backward))
