@@ -5,7 +5,7 @@
 ;; Author: Timm Lichte <timm.lichte@uni-tuebingen.de>
 ;; URL: https://codeberg.org/timmli/mu4e-walk
 ;; Version: 2.0
-;; Last modified: 2025-12-11 Thu 19:06:18
+;; Last modified: 2025-12-16 Tue 10:12:20
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: convenience mail
 
@@ -382,7 +382,7 @@ DIRECTION can be \\='up, \\='down, \\='left, \\='right."
     (keymap-local-set key
                       `(lambda ()
                          (interactive)
-                         (if (message-point-in-header-p)
+                         (if (mu4e-walk--point-in-address-field-p) ; Exclude subject line
                              (call-interactively (quote ,walk-fun))
                            (call-interactively (quote ,oldfun)))))))
 
